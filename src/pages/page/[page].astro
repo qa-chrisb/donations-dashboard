@@ -1,0 +1,50 @@
+---
+import Base from "../../layouts/Base.astro";
+import { loadDonations, paginate } from "../../lib/getDonations";
+
+export async function getStaticPaths() {
+  const { updated_at, donations } = await loadDonations();
+  const pages = paginate(donations, 50);
+  return pages.slice(1).map((_, i) => ({
+    params: { page: String(i + 2) },
+    props: { updated_at, index: i + 1, pages }
+  }));
+}
+
+const { updated_at, index, pages } = Astro.props;
+const items = pages[index];
+---
+
+<Base title={`Donations — Page ${index+1}`} updatedAt={updated_at}>
+  <section>
+    <ul class="divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-950">
+      {items.map((d) => (
+        <li class="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center rounded-full border border-gray-300 px-2 py-0.5 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300">{d.provider}</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">{new Date(d.occurred_at).toLocaleString()}</span>
+            </div>
+            <div class="mt-1 text-sm truncate">
+              <span class="font-medium">{d.donor_alias ?? "Anonymous"}</span>
+              {d.message && <span class="text-gray-500 dark:text-gray-400"> · {d.message}</span>}
+            </div>
+            {d.campaign && <div class="mt-1 text-xs text-indigo-600 dark:text-indigo-400">#{d.campaign}</div>}
+          </div>
+          <div class="mt-2 shrink-0 text-right sm:mt-0">
+            <div class="text-lg font-semibold">
+              {new Intl.NumberFormat(undefined, { style: "currency", currency: d.currency }).format(
+                (d.status === "REFUNDED" ? -Math.abs(d.amount_minor) : d.amount_minor) / 100
+              )}
+            </div>
+            <div class={`text-xs ${d.status === "REFUNDED" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>{d.status}</div>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <nav class="mt-4 flex justify-between text-sm">
+      <a href={index === 1 ? "/" : `/page/${index}/`} class="underline">← Prev</a>
+      <a href={`/page/${index+2}/`} class="underline">Next →</a>
+    </nav>
+  </section>
+</Base>

@@ -1,0 +1,20 @@
+{
+    "name": "donations-dashboard",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview"
+    },
+    "dependencies": {
+        "@astrojs/preact": "^4.1.0",
+        "astro": "^4.14.0",
+        "preact": "^10.27.1",
+        "tailwindcss": "^3.4.10"
+    },
+    "devDependencies": {
+        "@types/node": "^24.3.0",
+        "typescript": "^5.5.4"
+    }
+}

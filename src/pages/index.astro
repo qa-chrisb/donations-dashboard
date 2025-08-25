@@ -1,0 +1,15 @@
+---
+import Base from "../layouts/Base.astro";
+import DonationsWidget from "../components/DonationsWidget.astro";
+
+// If your Pages base is set, this default src resolves to /<repo>/data/donations.json
+---
+<Base title="Donations">
+  <section class="mx-auto max-w-2xl">
+    <DonationsWidget
+      src={`${import.meta.env.BASE_URL}data/donations.json`}
+      limit={8}
+      currencyHint="GBP"   /* drop if your feed is single-currency */
+    />
+  </section>
+</Base>
