@@ -4,11 +4,11 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   output: "static",
-  site: "https://qa-chris.github.io/donations-dashboard/",
-  base: "/donations-dashboard/",
+  site: "https:/qachris.dev/donations-dashboard/",
+  base: "/",
   integrations: [
     tailwind({
-      applyBaseStyles: false,
+      applyBaseStyles: true,
     }),
     preact(),
   ],
