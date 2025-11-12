@@ -1,15 +1,151 @@
 ---
 import Base from "../layouts/Base.astro";
 import DonationsWidget from "../components/DonationsWidget.astro";
+import { loadDonationFeed } from "../lib/donationFeed";
+import { fmtMajor } from "../lib/format";
 
-// If your Pages base is set, this default src resolves to /<repo>/data/donations.json
+const dataSrc = `${import.meta.env.BASE_URL}data/donations.json`;
+const feed = await loadDonationFeed({ src: dataSrc });
+const { rows, singleCurrency, totalMajor, updatedAt } = feed;
+
+const supporterTotal = new Set(rows.map((row) => row.name)).size;
+const latestGift = rows[0] ?? null;
+const latestTimestamp = latestGift ? new Date(latestGift.date) : null;
+const windowStart = latestTimestamp
+  ? new Date(latestTimestamp.getTime() - 24 * 60 * 60 * 1000)
+  : null;
+const rollingCount = windowStart
+  ? rows.filter((row) => new Date(row.date) >= windowStart).length
+  : 0;
+const refundRate = rows.length
+  ? Math.round((rows.filter((row) => row.isRefund).length / rows.length) * 100)
+  : 0;
+
+const highlightMetrics = [
+  {
+    label: singleCurrency ? "Captured value" : "Feed entries",
+    value: singleCurrency
+      ? fmtMajor(totalMajor ?? 0, singleCurrency)
+      : `${rows.length}`,
+    helper: singleCurrency
+      ? `${singleCurrency} totals tracked across providers.`
+      : "Chronological sample from the JSON feed.",
+  },
+  {
+    label: "Distinct supporters",
+    value: supporterTotal.toString(),
+    helper: "Derived from donor aliases and fallbacks.",
+  },
+  {
+    label: "24h pulse",
+    value: rollingCount
+      ? `${rollingCount} gift${rollingCount === 1 ? "" : "s"}`
+      : "Calm period",
+    helper: rollingCount
+      ? "Relative to the most recent gift."
+      : "Waiting for the next pledge.",
+  },
+  {
+    label: "Refund rate",
+    value: rows.length ? `${refundRate}%` : "-",
+    helper: rows.length
+      ? "Based on historical rows."
+      : "Need more data to analyse.",
+  },
+];
+
+const heroPoints = [
+  "Typed ingest isolates provider quirks yet stays framework-light.",
+  "Client-idle microcharts keep the build static but lively.",
+  "Data lives in /public so GitHub Pages can host without backends.",
+];
+
+const latestCopy = latestGift
+  ? `${latestGift.name} - ${fmtMajor(Math.abs(latestGift.amountMajor), latestGift.currency)}`
+  : "Awaiting first gift";
 ---
-<Base title="Donations">
-  <section class="mx-auto max-w-2xl">
-    <DonationsWidget
-      src={`${import.meta.env.BASE_URL}data/donations.json`}
-      limit={8}
-      currencyHint="GBP"   /* drop if your feed is single-currency */
-    />
+
+<Base
+  title="Donations console"
+  description="Minimal telemetry to demonstrate how I approach productised philanthropy reporting."
+  updatedAt={updatedAt}
+>
+  <section class="space-y-12">
+    <div class="surface-card space-y-6">
+      <div
+        class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div class="space-y-3">
+          <p class="text-sm uppercase tracking-[0.3em] text-stone-400">
+            Live operations
+          </p>
+          <h2 class="text-3xl font-semibold text-white">
+            Less noise, more signal.
+          </h2>
+          <p class="text-base text-stone-300 sm:text-lg">
+            The dashboard keeps copy short, data first, and favours
+            deterministic builds. Everything you see ships as static assets, so
+            it is deployable on any CDN in seconds.
+          </p>
+        </div>
+        <div
+          class="rounded-3xl border border-white/10 px-6 py-5 text-sm text-stone-300"
+        >
+          <p class="text-xs uppercase tracking-wide text-stone-400">
+            Latest gift
+          </p>
+          <p class="text-xl font-semibold text-white">{latestCopy}</p>
+          {
+            latestGift && (
+              <p class="mt-1 text-stone-400">
+                Logged{" "}
+                {new Date(latestGift.date).toLocaleString("en-GB", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </p>
+            )
+          }
+        </div>
+      </div>
+      <ul class="space-y-2 text-sm text-stone-300">
+        {
+          heroPoints.map((point) => (
+            <li class="flex items-start gap-3">
+              <span
+                class="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300"
+                aria-hidden="true"
+              />
+              <span>{point}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="soft-grid">
+        {
+          highlightMetrics.map((metric) => (
+            <div class="rounded-2xl border border-white/10 px-5 py-4">
+              <p class="metric-label">{metric.label}</p>
+              <p class="metric-value">{metric.value}</p>
+              <p class="text-sm text-stone-400">{metric.helper}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex flex-col gap-2">
+        <h2 class="text-2xl font-semibold text-white">Live stream</h2>
+        <p class="text-stone-300">
+          Streaming directly from <code
+            class="rounded bg-white/5 px-2 py-1 text-sm text-white"
+            >public/data/donations.json</code
+          >. Swap the file for any provider output and the UI recasts itself
+          instantly.
+        </p>
+      </div>
+      <DonationsWidget feed={feed} limit={8} />
+    </div>
   </section>
 </Base>
