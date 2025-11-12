@@ -2,10 +2,10 @@ name: Build & Deploy (gh-pages)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main] # change if your default branch is different
-  schedule:
-    - cron: "*/30 * * * *" # every 30 minutes (UTC)
+  # push:
+  #   branches: [main] # change if your default branch is different
+  # schedule:
+  #   - cron: "*/30 * * * *" # every 30 minutes (UTC)
 
 permissions:
   contents: read
