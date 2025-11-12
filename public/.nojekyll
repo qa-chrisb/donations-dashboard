@@ -1,0 +1,2 @@
+# This .nojekyll file ensures GitHub Pages does not process the site with Jekyll.
+# Needed so the generated _astro/ assets folder is served as-is.
