@@ -7,6 +7,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "allowImportingTsExtensions": true,
+    "noEmit": true,
     "types": ["astro/client", "node"]
   }
 }
